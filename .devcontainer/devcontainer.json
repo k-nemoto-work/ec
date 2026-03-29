@@ -5,7 +5,11 @@
   "workspaceFolder": "/workspace",
   "forwardPorts": [8080, 5432],
   "features": {
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    "ghcr.io/devcontainers-contrib/features/uv:1": {}
   },
   "postCreateCommand": "chmod +x gradlew && ./gradlew build",
   "customizations": {
