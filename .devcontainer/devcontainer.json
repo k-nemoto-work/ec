@@ -1,0 +1,21 @@
+{
+  "name": "ec-kotlin-backend",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [8080, 5432],
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "postCreateCommand": "chmod +x gradlew && ./gradlew build",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack",
+        "fwcd.kotlin"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}
