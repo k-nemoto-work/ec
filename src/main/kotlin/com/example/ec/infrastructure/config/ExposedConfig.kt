@@ -1,4 +1,4 @@
-package com.example.ec
+package com.example.ec.infrastructure.config
 
 import org.jetbrains.exposed.sql.Database
 import org.springframework.context.annotation.Bean

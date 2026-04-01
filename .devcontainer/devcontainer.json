@@ -17,8 +17,13 @@
       "extensions": [
         "vscjava.vscode-java-pack",
         "vmware.vscode-boot-dev-pack",
-        "fwcd.kotlin"
-      ]
+        "fwcd.kotlin",
+        "jebbs.plantuml"
+      ],
+      "settings": {
+        "plantuml.server": "http://plantuml:8080",
+        "plantuml.render": "PlantUMLServer"
+      }
     }
   },
   "remoteUser": "vscode"
