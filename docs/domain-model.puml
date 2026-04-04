@@ -1,0 +1,148 @@
+@startuml domain-model
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 12
+
+title ECサイト ドメインモデル図（リユース品 1点もの）
+
+' ========== 顧客コンテキスト ==========
+package "顧客コンテキスト" as customer_ctx #E8F5E9 {
+
+  class "顧客\n(Customer)" as Customer <<集約ルート>> {
+    顧客ID
+    名前
+    メールアドレス
+    パスワードハッシュ
+    ステータス: 活性 | 非活性
+  }
+
+  class "住所\n(Address)" as Address <<値オブジェクト>> {
+    郵便番号
+    都道府県
+    市区町村
+    番地
+  }
+
+  class "お気に入りリスト\n(Favorite)" as Favorite <<集約ルート>> {
+    顧客ID
+  }
+
+  class "お気に入りアイテム\n(FavoriteItem)" as FavoriteItem {
+    商品ID
+    追加日時
+  }
+
+  Customer "1" *-- "0..1" Address
+  Favorite "1" *-- "0..*" FavoriteItem
+  Customer "1" -- "1" Favorite : 所有 >
+}
+
+' ========== カタログコンテキスト ==========
+package "カタログコンテキスト" as catalog_ctx #E3F2FD {
+
+  class "商品\n(Product)" as Product <<集約ルート>> {
+    商品ID
+    商品名
+    価格（> 0）
+    商品説明
+    ステータス: 販売中 | 売約済み | 売却済み | 非公開
+  }
+
+  class "カテゴリ\n(Category)" as Category {
+    カテゴリID
+    カテゴリ名
+  }
+
+  Product "0..*" -- "1" Category : 所属 >
+}
+
+' ========== 注文コンテキスト ==========
+package "注文コンテキスト" as order_ctx #FFF3E0 {
+
+  class "カート\n(Cart)" as Cart <<集約ルート>> {
+    カートID
+    顧客ID
+  }
+
+  class "カートアイテム\n(CartItem)" as CartItem {
+    商品ID
+  }
+
+  class "注文\n(Order)" as Order <<集約ルート>> {
+    注文ID
+    顧客ID
+    注文日時
+    注文ステータス: 未確定 | 確定 | 配送中 | 配送完了 | キャンセル
+    合計金額
+  }
+
+  class "注文明細\n(OrderItem)" as OrderItem {
+    商品名（スナップショット）
+    単価（スナップショット）
+  }
+
+  Cart "1" *-- "0..*" CartItem
+  Order "1" *-- "1..*" OrderItem
+}
+
+' ========== 決済コンテキスト ==========
+package "決済コンテキスト" as payment_ctx #FCE4EC {
+
+  class "決済\n(Payment)" as Payment <<モック>> {
+    決済方法
+    決済ステータス: 未決済 | 決済済み
+  }
+}
+
+' ========== 配送コンテキスト ==========
+package "配送コンテキスト" as shipment_ctx #F3E5F5 {
+
+  class "配送\n(Shipment)" as Shipment <<モック>> {
+    配送先住所
+    配送ステータス: 未発送 | 発送済み | 配送完了
+  }
+}
+
+' ========== コンテキスト間の関連 ==========
+Customer ..> Cart : 顧客IDで参照
+Customer ..> Order : 顧客IDで参照
+CartItem ..> Product : 商品IDで参照\n（販売中のみ追加可）
+FavoriteItem ..> Product : 商品IDで参照\n（販売中・売約済みのみ追加可）
+Order "1" -- "1" Payment : 紐付く >
+Order "1" -- "1" Shipment : 紐付く >
+OrderItem ..> Product : 注文時にスナップショット取得
+
+' ========== ビジネスルール（注釈） ==========
+note bottom of Customer
+  ・メールアドレスはユニーク
+  ・活性ステータスの顧客のみ注文可能
+  ・パスワードは一定の強度が必要
+end note
+
+note bottom of Product
+  ・価格は 0 より大きい
+  ・販売中の商品のみカートに追加可
+  ・1点もの（在庫は常に0 or 1）
+end note
+
+note bottom of Cart
+  ・同じ商品の重複追加不可
+  ・顧客1人につきカート1つ
+end note
+
+note bottom of Order
+  ・確定時に商品を「売約済み」に変更
+  ・確定後は内容変更不可
+  ・配送中/配送完了後はキャンセル不可
+  ・決済済みでないと配送ステータスを進められない
+end note
+
+note bottom of Favorite
+  ・同じ商品の重複追加不可
+  ・顧客1人につき1リスト
+  ・上限数は要検討
+end note
+
+@enduml
