@@ -10,7 +10,9 @@
         "--context",
         "claude-code",
         "--project",
-        "/workspace"
+        "/workspace",
+        "--open-web-dashboard",
+        "False"
       ]
     },
     "context7": {

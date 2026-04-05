@@ -18,6 +18,7 @@
         "vscjava.vscode-java-pack",
         "vmware.vscode-boot-dev-pack",
         "fwcd.kotlin",
+        "mathiasfrohlich.Kotlin",
         "jebbs.plantuml"
       ],
       "settings": {
