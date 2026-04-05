@@ -17,32 +17,10 @@ class CustomerTest {
             passwordHash = "hashed_password",
         )
 
-        assertEquals("田中太郎", customer.name)
+        assertEquals(CustomerName("田中太郎"), customer.name)
         assertEquals(Email("tanaka@example.com"), customer.email)
         assertEquals(CustomerStatus.ACTIVE, customer.status)
         assertNull(customer.address)
-    }
-
-    @Test
-    fun `顧客名が空の場合はエラーになる`() {
-        assertThrows<DomainValidationException> {
-            Customer.create(
-                name = "",
-                email = Email("test@example.com"),
-                passwordHash = "hashed_password",
-            )
-        }
-    }
-
-    @Test
-    fun `顧客名が51文字以上の場合はエラーになる`() {
-        assertThrows<DomainValidationException> {
-            Customer.create(
-                name = "a".repeat(51),
-                email = Email("test@example.com"),
-                passwordHash = "hashed_password",
-            )
-        }
     }
 
     @Test

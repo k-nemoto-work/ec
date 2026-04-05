@@ -25,7 +25,7 @@ class UpdateAddressUseCaseTest {
         val customerId = UUID.randomUUID()
         val customer = Customer(
             id = CustomerId(customerId),
-            name = "田中太郎",
+            name = CustomerName("田中太郎"),
             email = Email("tanaka@example.com"),
             passwordHash = "hashed_password",
             status = CustomerStatus.ACTIVE,

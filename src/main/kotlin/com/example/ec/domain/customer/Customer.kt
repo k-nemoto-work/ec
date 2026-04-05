@@ -4,26 +4,19 @@ import com.example.ec.domain.exception.DomainValidationException
 
 data class Customer(
     val id: CustomerId,
-    val name: String,
+    val name: CustomerName,
     val email: Email,
     val passwordHash: String,
     val status: CustomerStatus,
     val address: Address?,
 ) {
-    init {
-        if (name.isBlank()) throw DomainValidationException("顧客名は空にできません")
-        if (name.length > MAX_NAME_LENGTH) throw DomainValidationException("顧客名は${MAX_NAME_LENGTH}文字以内で入力してください")
-    }
-
     fun updateAddress(newAddress: Address): Customer = copy(address = newAddress)
 
     companion object {
-        const val MAX_NAME_LENGTH = 50
-
         fun create(name: String, email: Email, passwordHash: String): Customer =
             Customer(
                 id = CustomerId.generate(),
-                name = name,
+                name = CustomerName(name),
                 email = email,
                 passwordHash = passwordHash,
                 status = CustomerStatus.ACTIVE,

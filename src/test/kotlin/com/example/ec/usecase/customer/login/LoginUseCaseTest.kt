@@ -27,7 +27,7 @@ class LoginUseCaseTest {
 
     private fun createActiveCustomer(): Customer = Customer(
         id = CustomerId(UUID.randomUUID()),
-        name = "田中太郎",
+        name = CustomerName("田中太郎"),
         email = Email("tanaka@example.com"),
         passwordHash = "hashed_password",
         status = CustomerStatus.ACTIVE,

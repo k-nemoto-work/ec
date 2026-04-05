@@ -17,7 +17,7 @@ class CustomerRepositoryImpl : CustomerRepository {
             val now = Clock.System.now()
             CustomersTable.insert {
                 it[id] = customer.id.value
-                it[name] = customer.name
+                it[name] = customer.name.value
                 it[email] = customer.email.value
                 it[passwordHash] = customer.passwordHash
                 it[status] = customer.status.name
@@ -49,7 +49,7 @@ class CustomerRepositoryImpl : CustomerRepository {
         transaction {
             val now = Clock.System.now()
             CustomersTable.update({ CustomersTable.id eq customer.id.value }) {
-                it[name] = customer.name
+                it[name] = customer.name.value
                 it[email] = customer.email.value
                 it[passwordHash] = customer.passwordHash
                 it[status] = customer.status.name
@@ -85,7 +85,7 @@ class CustomerRepositoryImpl : CustomerRepository {
     private fun ResultRow.toCustomer(): Customer {
         return Customer(
             id = CustomerId(this[CustomersTable.id]),
-            name = this[CustomersTable.name],
+            name = CustomerName(this[CustomersTable.name]),
             email = Email(this[CustomersTable.email]),
             passwordHash = this[CustomersTable.passwordHash],
             status = CustomerStatus.valueOf(this[CustomersTable.status]),

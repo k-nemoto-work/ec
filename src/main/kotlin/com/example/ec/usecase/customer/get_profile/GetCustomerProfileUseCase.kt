@@ -19,7 +19,7 @@ class GetCustomerProfileUseCase(
 
         return CustomerProfileResult(
             id = customer.id.value,
-            name = customer.name,
+            name = customer.name.value,
             email = customer.email.value,
             status = customer.status.name,
             address = customer.address?.let {
