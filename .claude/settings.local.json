@@ -3,7 +3,12 @@
     "allow": [
       "Skill(steering)",
       "Bash(npm test:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(./gradlew compileKotlin)",
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew compileKotlin compileTestKotlin)",
+      "Bash(./gradlew compileTestKotlin)",
+      "Bash(./gradlew compileTestKotlin --info)"
     ]
   },
   "enableAllProjectMcpServers": true
