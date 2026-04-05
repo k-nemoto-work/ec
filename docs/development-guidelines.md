@@ -132,6 +132,73 @@ http/ → usecase/ → domain/
 
 ### Domain層の実装ルール
 
+#### ドメインサービス
+
+単一の集約に収まらないビジネスロジックは**ドメインサービス**として切り出す。
+
+**いつ使うか:**
+- 複数の集約をまたぐビジネスルール
+- エンティティや値オブジェクトに持たせると不自然な操作（例: パスワードハッシュ化）
+
+**命名規則**: 役割・能力を表す名詞（サフィックスは付けない）
+
+| 種別 | 命名例 |
+|------|--------|
+| 〜するもの | `CustomerAuthenticator`, `PasswordHasher` |
+| 〜のルール・方針 | `DiscountPolicy`, `ShippingFeePolicy` |
+| 〜を計算するもの | `PricingCalculator` |
+
+**実装ルール:**
+- `@Service` アノテーションを付けない（Spring非依存）
+- 外部依存（DB等）が必要な場合はインターフェースを `domain/` に、実装を `infrastructure/` に置く
+
+```kotlin
+// ✅ 良い例: 純粋なドメインサービス（外部依存なし）
+class PasswordHasher {
+    fun hash(rawPassword: String): String { ... }
+    fun matches(rawPassword: String, hashed: String): Boolean { ... }
+}
+
+// ✅ 良い例: 外部依存が必要なドメインサービス → インターフェースをdomainに置く
+// domain/customer/CustomerUniquenessChecker.kt
+interface CustomerUniquenessChecker {
+    fun isEmailUnique(email: Email): Boolean
+}
+
+// infrastructure/repository/CustomerUniquenessCheckerImpl.kt
+@Repository
+class CustomerUniquenessCheckerImpl(...) : CustomerUniquenessChecker { ... }
+
+// ✅ 良い例: UseCaseからドメインサービスを利用
+@Service
+@Transactional
+class RegisterCustomerUseCase(
+    private val customerRepository: CustomerRepository,
+    private val uniquenessChecker: CustomerUniquenessChecker,  // インターフェースで受け取る
+    private val passwordHasher: PasswordHasher,
+) { ... }
+
+// ❌ 悪い例: @Service を付けてしまう（UseCase と区別がつかなくなる）
+@Service
+class CustomerAuthenticator { ... }
+```
+
+**配置場所**: 主に関係する集約と同じディレクトリ
+
+```
+domain/
+  customer/
+    Customer.kt                    # エンティティ
+    Email.kt                       # 値オブジェクト
+    CustomerRepository.kt          # リポジトリIF（Repositoryサフィックス）
+    CustomerUniquenessChecker.kt   # ドメインサービスIF（外部依存あり）
+    PasswordHasher.kt              # ドメインサービス（純粋）
+```
+
+---
+
+#### ドメインオブジェクトへのビジネスルール集約
+
 ```kotlin
 // ✅ 良い例: ビジネスルールはドメインオブジェクトに集約
 data class Cart(
