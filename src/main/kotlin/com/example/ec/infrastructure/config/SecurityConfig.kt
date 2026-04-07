@@ -29,6 +29,7 @@ class SecurityConfig(
                 auth
                     .requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/health", "/db-test").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/products/*/management").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .anyRequest().authenticated()
