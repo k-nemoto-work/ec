@@ -50,6 +50,14 @@ class ProductRepositoryImpl : ProductRepository {
         }
     }
 
+    override fun findAllByIds(ids: List<ProductId>): List<Product> {
+        return transaction {
+            ProductsTable
+                .selectAll().where { ProductsTable.id inList ids.map { it.value } }
+                .map { it.toProduct() }
+        }
+    }
+
     override fun findAllOnSale(categoryId: CategoryId?, page: Int, size: Int): List<Product> {
         return transaction {
             val query = ProductsTable.selectAll().where {
