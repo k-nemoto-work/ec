@@ -39,13 +39,13 @@ class RemoveFromFavoriteUseCaseTest {
         )
 
         every { favoriteRepository.findByCustomerId(CustomerId(customerId)) } returns favorite
-        justRun { favoriteRepository.update(any()) }
+        justRun { favoriteRepository.save(any()) }
 
         // When
         useCase.execute(RemoveFromFavoriteCommand(customerId = customerId, productId = productId))
 
         // Then
-        verify(exactly = 1) { favoriteRepository.update(any()) }
+        verify(exactly = 1) { favoriteRepository.save(any()) }
     }
 
     @Test

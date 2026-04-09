@@ -23,16 +23,8 @@ class AddToFavoriteUseCase(
         val product = productRepository.findById(productId)
             ?: throw ResourceNotFoundException("商品", command.productId.toString())
 
-        val existingFavorite = favoriteRepository.findByCustomerId(customerId)
-        val isNew = existingFavorite == null
-        val favorite = existingFavorite ?: Favorite.create(customerId)
-
+        val favorite = favoriteRepository.findByCustomerId(customerId) ?: Favorite.create(customerId)
         val updatedFavorite = favorite.addItem(productId, product.status)
-
-        if (isNew) {
-            favoriteRepository.save(updatedFavorite)
-        } else {
-            favoriteRepository.update(updatedFavorite)
-        }
+        favoriteRepository.save(updatedFavorite)
     }
 }

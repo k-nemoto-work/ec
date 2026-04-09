@@ -21,6 +21,6 @@ class RemoveFromFavoriteUseCase(
             ?: throw ResourceNotFoundException("お気に入り", customerId.value.toString())
 
         val updatedFavorite = favorite.removeItem(productId)
-        favoriteRepository.update(updatedFavorite)
+        favoriteRepository.save(updatedFavorite)
     }
 }

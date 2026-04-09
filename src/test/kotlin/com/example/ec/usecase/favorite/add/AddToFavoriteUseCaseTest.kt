@@ -61,13 +61,13 @@ class AddToFavoriteUseCaseTest {
 
         every { productRepository.findById(ProductId(productId)) } returns product
         every { favoriteRepository.findByCustomerId(CustomerId(customerId)) } returns existingFavorite
-        justRun { favoriteRepository.update(any()) }
+        justRun { favoriteRepository.save(any()) }
 
         // When
         useCase.execute(AddToFavoriteCommand(customerId = customerId, productId = productId))
 
         // Then
-        verify(exactly = 1) { favoriteRepository.update(any()) }
+        verify(exactly = 1) { favoriteRepository.save(any()) }
     }
 
     @Test

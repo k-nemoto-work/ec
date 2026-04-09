@@ -8,7 +8,10 @@ import com.example.ec.domain.customer.FavoriteRepository
 import com.example.ec.domain.product.ProductId
 import com.example.ec.infrastructure.table.FavoriteItemsTable
 import com.example.ec.infrastructure.table.FavoritesTable
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -27,6 +30,7 @@ class FavoriteRepositoryImpl : FavoriteRepository {
             val favoriteId = favoriteRow[FavoritesTable.id]
             val items = FavoriteItemsTable
                 .selectAll().where { FavoriteItemsTable.favoriteId eq favoriteId }
+                .orderBy(FavoriteItemsTable.addedAt, SortOrder.ASC)
                 .map { row ->
                     FavoriteItem(
                         productId = ProductId(row[FavoriteItemsTable.productId]),
@@ -44,24 +48,35 @@ class FavoriteRepositoryImpl : FavoriteRepository {
 
     override fun save(favorite: Favorite) {
         transaction {
-            FavoritesTable.insert {
-                it[id] = favorite.id.value
-                it[customerId] = favorite.customerId.value
-            }
-            favorite.items.forEach { item ->
-                FavoriteItemsTable.insert {
-                    it[favoriteId] = favorite.id.value
-                    it[productId] = item.productId.value
-                    it[addedAt] = item.addedAt
+            // お気に入りレコードが未存在の場合のみ INSERT
+            val exists = FavoritesTable
+                .selectAll().where { FavoritesTable.id eq favorite.id.value }
+                .count() > 0
+
+            if (!exists) {
+                FavoritesTable.insert {
+                    it[id] = favorite.id.value
+                    it[customerId] = favorite.customerId.value
                 }
             }
-        }
-    }
 
-    override fun update(favorite: Favorite) {
-        transaction {
-            FavoriteItemsTable.deleteWhere { favoriteId eq favorite.id.value }
-            favorite.items.forEach { item ->
+            // 差分更新: 現在のDBアイテムと比較して追加・削除のみ実行
+            val currentProductIds = FavoriteItemsTable
+                .selectAll().where { FavoriteItemsTable.favoriteId eq favorite.id.value }
+                .map { it[FavoriteItemsTable.productId] }
+                .toSet()
+
+            val desiredProductIds = favorite.items.map { it.productId.value }.toSet()
+
+            val toDelete = currentProductIds - desiredProductIds
+            if (toDelete.isNotEmpty()) {
+                FavoriteItemsTable.deleteWhere {
+                    (favoriteId eq favorite.id.value) and (productId inList toDelete.toList())
+                }
+            }
+
+            val toInsert = favorite.items.filter { it.productId.value !in currentProductIds }
+            toInsert.forEach { item ->
                 FavoriteItemsTable.insert {
                     it[favoriteId] = favorite.id.value
                     it[productId] = item.productId.value
