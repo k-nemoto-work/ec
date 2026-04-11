@@ -34,7 +34,7 @@ class OrderTest {
         status = status,
     )
 
-    private fun createOrder(status: OrderStatus = OrderStatus.PENDING): Order {
+    private fun createOrder(status: OrderStatus = OrderStatus.CONFIRMED): Order {
         val product = createProduct()
         val order = Order.create(
             customerId = customerId,
@@ -43,8 +43,7 @@ class OrderTest {
             paymentMethod = PaymentMethod.CREDIT_CARD,
         )
         return when (status) {
-            OrderStatus.PENDING -> order
-            OrderStatus.CONFIRMED -> order.copy(status = OrderStatus.CONFIRMED)
+            OrderStatus.CONFIRMED -> order
             OrderStatus.SHIPPING -> order.copy(status = OrderStatus.SHIPPING)
             OrderStatus.DELIVERED -> order.copy(status = OrderStatus.DELIVERED)
             OrderStatus.CANCELLED -> order.copy(status = OrderStatus.CANCELLED)
@@ -68,7 +67,7 @@ class OrderTest {
         assertEquals(product.name.value, order.items[0].productNameSnapshot)
         assertEquals(product.price, order.items[0].priceSnapshot)
         assertEquals(product.price.amount, order.totalAmount.amount)
-        assertEquals(OrderStatus.PENDING, order.status)
+        assertEquals(OrderStatus.CONFIRMED, order.status)
         assertEquals(PaymentStatus.UNPAID, order.payment.status)
         assertEquals(ShipmentStatus.NOT_SHIPPED, order.shipment.status)
     }
@@ -112,13 +111,6 @@ class OrderTest {
     }
 
     // === Order.cancel() ===
-
-    @Test
-    fun `PENDING状態の注文をキャンセルできる`() {
-        val order = createOrder(OrderStatus.PENDING)
-        val cancelled = order.cancel()
-        assertEquals(OrderStatus.CANCELLED, cancelled.status)
-    }
 
     @Test
     fun `CONFIRMED状態の注文をキャンセルできる`() {

@@ -74,7 +74,7 @@ data class CustomerId(val value: UUID)
 
 data class Customer(
     val id: CustomerId,
-    val name: String,                    // 1-50文字
+    val name: CustomerName,              // 値オブジェクト、1-50文字
     val email: Email,                    // 値オブジェクト、システム全体でユニーク
     val passwordHash: String,            // BCryptハッシュ
     val status: CustomerStatus,          // 活性 | 非活性
@@ -176,7 +176,8 @@ data class Cart(
 )
 
 data class CartItem(
-    val productId: ProductId
+    val productId: ProductId,
+    val addedAt: Instant
 )
 ```
 
@@ -205,7 +206,6 @@ data class Order(
 )
 
 enum class OrderStatus {
-    PENDING,    // 未確定
     CONFIRMED,  // 確定
     SHIPPING,   // 配送中
     DELIVERED,  // 配送完了
@@ -236,6 +236,7 @@ enum class ShipmentStatus { NOT_SHIPPED, SHIPPED, DELIVERED }
 
 **ビジネスルール**:
 - 注文確定時に商品を `RESERVED` に変更（既に `RESERVED` の場合はエラー）
+- 注文確定時に `CONFIRMED` ステータスで作成される
 - 注文確定後は内容変更不可
 - `SHIPPING` / `DELIVERED` 後はキャンセル不可
 - 決済ステータスが `PAID` にならないと配送ステータスを `SHIPPED` に進められない
@@ -419,7 +420,8 @@ POST /api/v1/auth/login
 | メソッド | パス | 説明 | 認証 |
 |---|---|---|---|
 | GET | `/api/v1/products` | 商品一覧（`ON_SALE`のみ、カテゴリ絞り込み・ページネーション対応） | 不要 |
-| GET | `/api/v1/products/{productId}` | 商品詳細 | 不要 |
+| GET | `/api/v1/products/{productId}` | 商品詳細（`ON_SALE`のみ） | 不要 |
+| GET | `/api/v1/products/{productId}/management` | 商品詳細管理用（全ステータス対応） | 必要 |
 | POST | `/api/v1/products` | 商品登録（出品者） | 必要 |
 | PUT | `/api/v1/products/{productId}` | 商品情報更新 | 必要 |
 | PATCH | `/api/v1/products/{productId}/status` | 商品ステータス変更 | 必要 |

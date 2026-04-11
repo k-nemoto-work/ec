@@ -50,7 +50,7 @@ class UpdatePaymentUseCaseTest {
                 OrderItem(productId = ProductId(UUID.randomUUID()), productNameSnapshot = "商品", priceSnapshot = Money(1000))
             ),
             totalAmount = Money(1000),
-            status = OrderStatus.PENDING,
+            status = OrderStatus.CONFIRMED,
             payment = Payment(method = PaymentMethod.CREDIT_CARD, status = paymentStatus),
             shipment = Shipment(address = shippingAddress, status = ShipmentStatus.NOT_SHIPPED),
             orderedAt = Clock.System.now(),

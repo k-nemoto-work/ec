@@ -22,7 +22,7 @@ data class Order(
     /**
      * 注文をキャンセルする。
      *
-     * PENDING または CONFIRMED 状態の注文のみキャンセル可能。
+     * CONFIRMED 状態の注文のみキャンセル可能。
      *
      * @throws BusinessRuleViolationException SHIPPING/DELIVERED 状態の場合
      */
@@ -118,7 +118,7 @@ data class Order(
                 customerId = customerId,
                 items = items,
                 totalAmount = totalAmount,
-                status = OrderStatus.PENDING,
+                status = OrderStatus.CONFIRMED,
                 payment = Payment(method = paymentMethod, status = PaymentStatus.UNPAID),
                 shipment = Shipment(address = shippingAddress, status = ShipmentStatus.NOT_SHIPPED),
                 orderedAt = Clock.System.now(),

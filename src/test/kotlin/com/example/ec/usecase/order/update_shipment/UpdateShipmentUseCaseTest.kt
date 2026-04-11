@@ -60,7 +60,7 @@ class UpdateShipmentUseCaseTest {
             OrderItem(productId = productId, productNameSnapshot = "商品", priceSnapshot = Money(1000))
         ),
         totalAmount = Money(1000),
-        status = OrderStatus.PENDING,
+        status = OrderStatus.CONFIRMED,
         payment = Payment(method = PaymentMethod.CREDIT_CARD, status = paymentStatus),
         shipment = Shipment(address = shippingAddress, status = shipmentStatus),
         orderedAt = Clock.System.now(),

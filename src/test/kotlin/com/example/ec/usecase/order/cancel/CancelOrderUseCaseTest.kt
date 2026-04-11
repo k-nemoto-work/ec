@@ -79,9 +79,9 @@ class CancelOrderUseCaseTest {
     )
 
     @Test
-    fun `PENDING状態の注文をキャンセルできる`() {
+    fun `CONFIRMED状態の注文をキャンセルできる`() {
         val customerId = UUID.randomUUID()
-        val order = createOrder(customerId, OrderStatus.PENDING)
+        val order = createOrder(customerId, OrderStatus.CONFIRMED)
         val product = createProduct(order.items[0].productId)
 
         every { orderRepository.findById(order.id) } returns order
@@ -111,7 +111,7 @@ class CancelOrderUseCaseTest {
     fun `他人の注文をキャンセルするとUnauthorizedAccessExceptionが発生する`() {
         val customerId = UUID.randomUUID()
         val otherCustomerId = UUID.randomUUID()
-        val order = createOrder(otherCustomerId, OrderStatus.PENDING)
+        val order = createOrder(otherCustomerId, OrderStatus.CONFIRMED)
 
         every { orderRepository.findById(order.id) } returns order
 
