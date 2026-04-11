@@ -4,6 +4,7 @@ import com.example.ec.domain.exception.AuthenticationException
 import com.example.ec.domain.exception.BusinessRuleViolationException
 import com.example.ec.domain.exception.DomainValidationException
 import com.example.ec.domain.exception.ResourceNotFoundException
+import com.example.ec.domain.exception.UnauthorizedAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -35,4 +36,16 @@ class GlobalExceptionHandler {
         ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ErrorResponse(code = "RESOURCE_NOT_FOUND", message = e.message ?: "リソースが見つかりません"))
+
+    @ExceptionHandler(UnauthorizedAccessException::class)
+    fun handleUnauthorizedAccess(e: UnauthorizedAccessException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(ErrorResponse(code = "UNAUTHORIZED_ACCESS", message = e.message ?: "アクセス権限がありません"))
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(e: IllegalArgumentException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(code = "INVALID_ARGUMENT", message = e.message ?: "無効なパラメータです"))
 }
