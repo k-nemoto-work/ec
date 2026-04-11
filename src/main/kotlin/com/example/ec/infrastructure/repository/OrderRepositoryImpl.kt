@@ -85,7 +85,7 @@ class OrderRepositoryImpl : OrderRepository {
             val orderRows = OrdersTable
                 .selectAll().where { OrdersTable.customerId eq customerId.value }
                 .orderBy(OrdersTable.orderedAt, SortOrder.DESC)
-                .limit(size, offset = (page * size).toLong())
+                .limit(size).offset((page * size).toLong())
                 .toList()
 
             if (orderRows.isEmpty()) return@transaction emptyList()
@@ -136,8 +136,10 @@ class OrderRepositoryImpl : OrderRepository {
                     items = itemsByOrderId[orderId] ?: emptyList(),
                     totalAmount = Money(row[OrdersTable.totalAmount]),
                     status = OrderStatus.valueOf(row[OrdersTable.status]),
-                    payment = paymentsByOrderId[orderId]!!,
-                    shipment = shipmentsByOrderId[orderId]!!,
+                    payment = paymentsByOrderId[orderId]
+                        ?: error("payments レコードが見つかりません: orderId=$orderId"),
+                    shipment = shipmentsByOrderId[orderId]
+                        ?: error("shipments レコードが見つかりません: orderId=$orderId"),
                     orderedAt = row[OrdersTable.orderedAt],
                 )
             }

@@ -42,4 +42,10 @@ class GlobalExceptionHandler {
         ResponseEntity
             .status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(code = "UNAUTHORIZED_ACCESS", message = e.message ?: "アクセス権限がありません"))
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(e: IllegalArgumentException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(code = "INVALID_ARGUMENT", message = e.message ?: "無効なパラメータです"))
 }

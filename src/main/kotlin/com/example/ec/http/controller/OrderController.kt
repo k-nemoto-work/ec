@@ -47,10 +47,6 @@ class OrderController(
         val shippingStreetAddress: String,
     )
 
-    data class UpdatePaymentRequest(
-        val status: String,
-    )
-
     data class UpdateShipmentRequest(
         val status: String,
     )
@@ -111,7 +107,6 @@ class OrderController(
     fun updatePayment(
         authentication: Authentication,
         @PathVariable orderId: UUID,
-        @RequestBody request: UpdatePaymentRequest,
     ): ResponseEntity<Void> {
         val customerId = UUID.fromString(authentication.principal as String)
         updatePaymentUseCase.execute(UpdatePaymentCommand(orderId = orderId, customerId = customerId))
