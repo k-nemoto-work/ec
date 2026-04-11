@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 class GetCartUseCase(
     private val cartRepository: CartRepository,
     private val productRepository: ProductRepository,
@@ -16,13 +16,20 @@ class GetCartUseCase(
 
     fun execute(customerId: UUID): CartResult {
         val cart = cartRepository.findByCustomerId(CustomerId(customerId))
-            ?: return CartResult(cartId = null, items = emptyList(), totalAmount = 0L)
+            ?: return CartResult(items = emptyList(), totalAmount = 0L)
 
         val productIds = cart.items.map { it.productId }
         val products = productRepository.findAllByIds(productIds).associateBy { it.id }
 
-        val itemResults = cart.items.mapNotNull { item ->
-            val product = products[item.productId] ?: return@mapNotNull null
+        val availableItems = cart.items.filter { products.containsKey(it.productId) }
+
+        // カタログから削除された商品をカートからも除去する
+        if (availableItems.size < cart.items.size) {
+            cartRepository.save(cart.copy(items = availableItems))
+        }
+
+        val itemResults = availableItems.map { item ->
+            val product = products.getValue(item.productId)
             CartItemResult(
                 productId = item.productId.value,
                 productName = product.name.value,
@@ -34,7 +41,6 @@ class GetCartUseCase(
         val totalAmount = itemResults.sumOf { it.price }
 
         return CartResult(
-            cartId = cart.id.value,
             items = itemResults,
             totalAmount = totalAmount,
         )

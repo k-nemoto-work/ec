@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -34,7 +35,7 @@ class RemoveFromCartUseCaseTest {
         val cart = Cart(
             id = CartId(UUID.randomUUID()),
             customerId = CustomerId(customerId),
-            items = listOf(CartItem(productId = ProductId(productId))),
+            items = listOf(CartItem(productId = ProductId(productId), addedAt = Clock.System.now())),
         )
 
         every { cartRepository.findByCustomerId(CustomerId(customerId)) } returns cart
@@ -70,7 +71,7 @@ class RemoveFromCartUseCaseTest {
         val cart = Cart(
             id = CartId(UUID.randomUUID()),
             customerId = CustomerId(customerId),
-            items = listOf(CartItem(productId = ProductId(anotherProductId))),
+            items = listOf(CartItem(productId = ProductId(anotherProductId), addedAt = Clock.System.now())),
         )
 
         every { cartRepository.findByCustomerId(CustomerId(customerId)) } returns cart

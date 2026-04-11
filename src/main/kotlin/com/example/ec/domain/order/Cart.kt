@@ -6,6 +6,7 @@ import com.example.ec.domain.exception.ResourceNotFoundException
 import com.example.ec.domain.product.Product
 import com.example.ec.domain.product.ProductId
 import com.example.ec.domain.product.ProductStatus
+import kotlinx.datetime.Clock
 
 data class Cart(
     val id: CartId,
@@ -27,7 +28,7 @@ data class Cart(
         if (items.any { it.productId == product.id }) {
             throw BusinessRuleViolationException("この商品は既にカートに追加されています: ${product.id.value}")
         }
-        return copy(items = items + CartItem(productId = product.id))
+        return copy(items = items + CartItem(productId = product.id, addedAt = Clock.System.now()))
     }
 
     /**

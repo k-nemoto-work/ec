@@ -7,7 +7,10 @@ import com.example.ec.domain.order.CartItem
 import com.example.ec.domain.order.CartRepository
 import com.example.ec.domain.product.*
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -35,7 +38,7 @@ class GetCartUseCaseTest {
         val cart = Cart(
             id = CartId(UUID.randomUUID()),
             customerId = CustomerId(customerId),
-            items = listOf(CartItem(productId = ProductId(productId))),
+            items = listOf(CartItem(productId = ProductId(productId), addedAt = Clock.System.now())),
         )
         val product = Product(
             id = ProductId(productId),
@@ -86,8 +89,8 @@ class GetCartUseCaseTest {
             id = CartId(UUID.randomUUID()),
             customerId = CustomerId(customerId),
             items = listOf(
-                CartItem(productId = ProductId(productId1)),
-                CartItem(productId = ProductId(productId2)),
+                CartItem(productId = ProductId(productId1), addedAt = Clock.System.now()),
+                CartItem(productId = ProductId(productId2), addedAt = Clock.System.now()),
             ),
         )
         val products = listOf(
@@ -132,8 +135,8 @@ class GetCartUseCaseTest {
             id = CartId(UUID.randomUUID()),
             customerId = CustomerId(customerId),
             items = listOf(
-                CartItem(productId = ProductId(existingProductId)),
-                CartItem(productId = ProductId(deletedProductId)),
+                CartItem(productId = ProductId(existingProductId), addedAt = Clock.System.now()),
+                CartItem(productId = ProductId(deletedProductId), addedAt = Clock.System.now()),
             ),
         )
         val existingProduct = Product(
@@ -147,6 +150,7 @@ class GetCartUseCaseTest {
 
         every { cartRepository.findByCustomerId(CustomerId(customerId)) } returns cart
         every { productRepository.findAllByIds(any()) } returns listOf(existingProduct)
+        justRun { cartRepository.save(any()) }
 
         // When
         val result = useCase.execute(customerId)
@@ -155,5 +159,48 @@ class GetCartUseCaseTest {
         assertEquals(1, result.items.size)
         assertEquals(existingProductId, result.items[0].productId)
         assertEquals(1000L, result.totalAmount)
+    }
+
+    @Test
+    fun `カタログから削除された商品はDBのカートからも除去される`() {
+        // Given
+        val customerId = UUID.randomUUID()
+        val existingProductId = UUID.randomUUID()
+        val deletedProductId = UUID.randomUUID()
+        val categoryId = UUID.randomUUID()
+
+        val cart = Cart(
+            id = CartId(UUID.randomUUID()),
+            customerId = CustomerId(customerId),
+            items = listOf(
+                CartItem(productId = ProductId(existingProductId), addedAt = Clock.System.now()),
+                CartItem(productId = ProductId(deletedProductId), addedAt = Clock.System.now()),
+            ),
+        )
+        val existingProduct = Product(
+            id = ProductId(existingProductId),
+            name = ProductName("存在する商品"),
+            price = Money(1000),
+            description = "説明",
+            categoryId = CategoryId(categoryId),
+            status = ProductStatus.ON_SALE,
+        )
+
+        every { cartRepository.findByCustomerId(CustomerId(customerId)) } returns cart
+        every { productRepository.findAllByIds(any()) } returns listOf(existingProduct)
+        justRun { cartRepository.save(any()) }
+
+        // When
+        useCase.execute(customerId)
+
+        // Then: 削除済み商品を除いたカートで save が呼ばれること
+        verify(exactly = 1) {
+            cartRepository.save(
+                match { savedCart ->
+                    savedCart.items.size == 1 &&
+                        savedCart.items[0].productId == ProductId(existingProductId)
+                }
+            )
+        }
     }
 }

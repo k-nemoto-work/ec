@@ -8,11 +8,14 @@ import com.example.ec.domain.order.CartRepository
 import com.example.ec.domain.product.ProductId
 import com.example.ec.infrastructure.table.CartItemsTable
 import com.example.ec.infrastructure.table.CartsTable
+import kotlinx.datetime.Clock
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
@@ -29,8 +32,12 @@ class CartRepositoryImpl : CartRepository {
             val cartId = cartRow[CartsTable.id]
             val items = CartItemsTable
                 .selectAll().where { CartItemsTable.cartId eq cartId }
+                .orderBy(CartItemsTable.addedAt, SortOrder.ASC)
                 .map { row ->
-                    CartItem(productId = ProductId(row[CartItemsTable.productId]))
+                    CartItem(
+                        productId = ProductId(row[CartItemsTable.productId]),
+                        addedAt = row[CartItemsTable.addedAt],
+                    )
                 }
 
             Cart(
@@ -43,16 +50,10 @@ class CartRepositoryImpl : CartRepository {
 
     override fun save(cart: Cart) {
         transaction {
-            // カートレコードが未存在の場合のみ INSERT
-            val exists = CartsTable
-                .selectAll().where { CartsTable.id eq cart.id.value }
-                .count() > 0
-
-            if (!exists) {
-                CartsTable.insert {
-                    it[id] = cart.id.value
-                    it[customerId] = cart.customerId.value
-                }
+            // 同一顧客の同時リクエストによる競合を避けるため insertIgnore を使用
+            CartsTable.insertIgnore {
+                it[id] = cart.id.value
+                it[customerId] = cart.customerId.value
             }
 
             // 差分更新: 現在のDBアイテムと比較して追加・削除のみ実行
@@ -75,6 +76,7 @@ class CartRepositoryImpl : CartRepository {
                 CartItemsTable.insert {
                     it[cartId] = cart.id.value
                     it[productId] = item.productId.value
+                    it[addedAt] = item.addedAt
                 }
             }
         }
