@@ -69,7 +69,7 @@ DIによる依存性逆転（DIP）: Domain層がRepositoryインターフェー
 
 #### HTTP層
 - **責務**:
-  - Controller: リクエストのデシリアライズ・バリデーション、JWTからの`customerId`抽出、UseCaseの呼び出し
+  - Controller: リクエストのデシリアライズ・バリデーション、JWT Cookie からの`customerId`抽出、UseCaseの呼び出し
   - Presenter: UseCaseの出力をHTTPレスポンス用に整形する
 - **許可**: UseCaseの呼び出し、Presenterによるレスポンス整形
 - **禁止**: ドメインロジックの実装、Repositoryへの直接アクセス
@@ -204,26 +204,31 @@ class CustomerRepositoryImpl : CustomerRepository {
 
 ## セキュリティアーキテクチャ
 
-### 認証フロー（JWT）
+### 認証フロー（JWT Cookie）
 
 ```
 1. POST /api/v1/auth/login
    → メールアドレス・パスワード検証
    → JWTを生成（ペイロード: customerId, exp）
-   → クライアントにトークン返却
+   → Set-Cookie: jwt={token}; HttpOnly; SameSite=Strict; Path=/
 
-2. 認証が必要なAPI
-   → Authorization: Bearer {token} ヘッダーを検証
+2. POST /api/v1/auth/logout
+   → jwt Cookie を maxAge=0 で上書きし無効化
+
+3. 認証が必要なAPI
+   → Cookie の jwt 値を検証
    → 署名・有効期限チェック（DBアクセスなし）
    → ペイロードからcustomerIdを取得しControllerに渡す
 ```
+
+Cookie 方式採用の理由: `HttpOnly` により JavaScript からのトークン読み取りを防ぎ XSS 耐性を高める。`SameSite=Strict` により CSRF を抑制する。
 
 ### JWT設定値
 
 | パラメータ | 値 | 備考 |
 |-----------|-----|------|
 | アルゴリズム | HS256 | 対称鍵署名 |
-| 有効期限（exp） | 3600秒（1時間） | functional-design.mdのexpiresIn: 3600と一致 |
+| 有効期限（exp） | 3600秒（1時間） | Cookie の maxAge にも同値を設定 |
 | 署名鍵 | 環境変数 `JWT_SECRET` | ハードコード禁止 |
 
 ### 認可（認可制御）
