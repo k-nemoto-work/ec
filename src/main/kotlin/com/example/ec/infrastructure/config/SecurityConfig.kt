@@ -28,6 +28,7 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                     .requestMatchers("/health", "/db-test").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/products/*/management").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()

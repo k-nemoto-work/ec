@@ -146,6 +146,14 @@ class OrderRepositoryImpl : OrderRepository {
         }
     }
 
+    override fun countByCustomerId(customerId: CustomerId): Long {
+        return transaction {
+            OrdersTable
+                .selectAll().where { OrdersTable.customerId eq customerId.value }
+                .count()
+        }
+    }
+
     override fun save(order: Order) {
         transaction {
             val now = Clock.System.now()

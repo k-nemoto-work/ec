@@ -13,7 +13,9 @@ class GetOrdersUseCase(
 ) {
 
     fun execute(customerId: UUID, page: Int, size: Int): OrdersResult {
-        val orders = orderRepository.findByCustomerId(CustomerId(customerId), page, size)
+        val id = CustomerId(customerId)
+        val orders = orderRepository.findByCustomerId(id, page, size)
+        val totalCount = orderRepository.countByCustomerId(id)
         return OrdersResult(
             orders = orders.map { order ->
                 OrderSummaryResult(
@@ -24,6 +26,7 @@ class GetOrdersUseCase(
                     orderedAt = order.orderedAt.toString(),
                 )
             },
+            totalCount = totalCount,
             page = page,
             size = size,
         )

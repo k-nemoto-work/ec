@@ -398,11 +398,20 @@ POST /api/v1/auth/login
   "password": "Pass1234!"
 }
 ```
-レスポンス `200 OK`:
-```json
-{ "accessToken": "jwt_token", "expiresIn": 3600 }
-```
+レスポンス `204 No Content`:
+- JWTを `jwt` という名前の HttpOnly Cookie としてセット（`SameSite=Strict`）
+- レスポンスボディなし
+
 エラー: `401` 認証失敗
+
+---
+
+#### ログアウト
+```
+POST /api/v1/auth/logout
+```
+レスポンス `204 No Content`:
+- `jwt` Cookie を無効化（`maxAge=0`）
 
 ---
 
@@ -419,6 +428,7 @@ POST /api/v1/auth/login
 
 | メソッド | パス | 説明 | 認証 |
 |---|---|---|---|
+| GET | `/api/v1/products/categories` | カテゴリ一覧取得 | 不要 |
 | GET | `/api/v1/products` | 商品一覧（`ON_SALE`のみ、カテゴリ絞り込み・ページネーション対応） | 不要 |
 | GET | `/api/v1/products/{productId}` | 商品詳細（`ON_SALE`のみ） | 不要 |
 | GET | `/api/v1/products/{productId}/management` | 商品詳細管理用（全ステータス対応） | 必要 |
@@ -512,6 +522,28 @@ POST /api/v1/auth/login
 | PATCH | `/api/v1/orders/{orderId}/cancel` | 注文キャンセル | 必要 |
 | PATCH | `/api/v1/orders/{orderId}/payment` | 決済ステータス更新（モック） | 必要 |
 | PATCH | `/api/v1/orders/{orderId}/shipment` | 配送ステータス更新（モック） | 必要 |
+
+`GET /api/v1/orders` クエリパラメータ:
+- `page`: ページ番号（0始まり）
+- `size`: 1ページのサイズ（デフォルト20）
+
+`GET /api/v1/orders` レスポンス例:
+```json
+{
+  "orders": [
+    {
+      "orderId": "uuid",
+      "status": "CONFIRMED",
+      "totalAmount": 8500,
+      "itemCount": 1,
+      "orderedAt": "2026-04-12T10:00:00Z"
+    }
+  ],
+  "totalCount": 42,
+  "page": 0,
+  "size": 20
+}
+```
 
 ---
 
