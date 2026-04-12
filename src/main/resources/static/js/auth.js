@@ -94,9 +94,8 @@ function renderLoginForm() {
     errEl.style.display = 'none';
 
     try {
-      const result = await api.login(email, password);
-      if (!result) return;
-      Auth.save(result.accessToken);
+      await api.login(email, password);
+      Auth.setLoggedIn();
       await updateNav();
       window.toast('ログインしました', 'success');
       window.location.hash = '#/';
@@ -172,9 +171,8 @@ function renderRegisterForm() {
     try {
       await api.register(name, email, password);
       // Auto-login after register
-      const loginResult = await api.login(email, password);
-      if (!loginResult) return;
-      Auth.save(loginResult.accessToken);
+      await api.login(email, password);
+      Auth.setLoggedIn();
       await updateNav();
       window.toast('アカウントを作成しました', 'success');
       window.location.hash = '#/';

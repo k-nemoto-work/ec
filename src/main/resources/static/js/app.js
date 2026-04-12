@@ -104,7 +104,7 @@ async function route() {
       </div>`;
   }
 
-  updateNav();
+  await updateNav();
 }
 
 // --- Hamburger ---
@@ -118,7 +118,8 @@ document.getElementById('hamburger').addEventListener('click', function() {
 
 // --- Logout handlers ---
 ['nav-logout', 'mob-logout'].forEach(id => {
-  document.getElementById(id).addEventListener('click', () => {
+  document.getElementById(id).addEventListener('click', async () => {
+    try { await api.logout(); } catch (_) { /* ignore */ }
     Auth.clear();
     window.toast('ログアウトしました', 'info');
     updateNav();

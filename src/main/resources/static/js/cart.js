@@ -122,7 +122,7 @@ export async function mountCart(container) {
 
           <div id="order-error" class="form-error" style="display:none; margin-top:12px;"></div>
 
-          <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
+          <div class="form-actions-end">
             <button class="btn-secondary" id="btn-cancel-order">キャンセル</button>
             <button class="btn-primary" id="btn-place-order"><span>ORDER NOW</span></button>
           </div>

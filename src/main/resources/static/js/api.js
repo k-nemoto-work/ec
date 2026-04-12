@@ -2,25 +2,23 @@
 // API.JS — Auth + Fetch wrapper + All API calls
 // ============================================
 
-const TOKEN_KEY = 'reuse_jwt';
+const LOGGED_IN_KEY = 'logged_in';
 
 export const Auth = {
-  save(token)   { localStorage.setItem(TOKEN_KEY, token); },
-  get()         { return localStorage.getItem(TOKEN_KEY); },
-  clear()       { localStorage.removeItem(TOKEN_KEY); },
-  isLoggedIn()  { return !!localStorage.getItem(TOKEN_KEY); },
+  setLoggedIn() { localStorage.setItem(LOGGED_IN_KEY, 'true'); },
+  clear()       { localStorage.removeItem(LOGGED_IN_KEY); },
+  isLoggedIn()  { return !!localStorage.getItem(LOGGED_IN_KEY); },
 };
 
 async function request(method, path, body = null) {
   const headers = { 'Content-Type': 'application/json' };
-  const token = Auth.get();
-  if (token) headers['Authorization'] = 'Bearer ' + token;
 
   let res;
   try {
     res = await fetch('/api/v1' + path, {
       method,
       headers,
+      credentials: 'same-origin',
       body: body != null ? JSON.stringify(body) : null,
     });
   } catch (e) {
@@ -33,7 +31,7 @@ async function request(method, path, body = null) {
     return null;
   }
 
-  if (res.status === 204 || res.status === 201 && res.headers.get('content-length') === '0') {
+  if (res.status === 204) {
     return null;
   }
 
@@ -55,8 +53,10 @@ export const api = {
   // --- Auth ---
   login:    (email, password) => request('POST', '/auth/login',    { email, password }),
   register: (name, email, password) => request('POST', '/auth/register', { name, email, password }),
+  logout:   () => request('POST', '/auth/logout'),
 
   // --- Products ---
+  getCategories: () => request('GET', '/products/categories'),
   getProducts: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return request('GET', '/products' + (q ? '?' + q : ''));

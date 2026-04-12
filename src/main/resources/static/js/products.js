@@ -4,53 +4,22 @@
 import { api, Auth } from './api.js';
 import { updateNav } from './app.js';
 
-const CATEGORIES = [
-  { id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', name: '古着' },
-  { id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901', name: '家電' },
-  { id: 'c3d4e5f6-a7b8-9012-cdef-123456789012', name: '雑貨' },
-  { id: 'd4e5f6a7-b8c9-0123-def0-234567890123', name: '本・メディア' },
-  { id: 'e5f6a7b8-c9d0-1234-ef01-345678901234', name: 'スポーツ・アウトドア' },
-];
+let CATEGORIES = [];
+
+async function loadCategories() {
+  try {
+    const data = await api.getCategories();
+    CATEGORIES = data || [];
+  } catch (_) {
+    CATEGORIES = [];
+  }
+}
 
 function getCategoryName(id) {
-  const c = CATEGORIES.find(c => c.id === id);
+  const c = CATEGORIES.find(c => String(c.id) === String(id));
   return c ? c.name : '';
 }
 
-// Deterministic geometric SVG from product ID
-function productPattern(id) {
-  const seed = (id || 'default').replace(/-/g, '');
-  function hi(i) { return parseInt(seed.slice(i * 2, i * 2 + 2) || 'aa', 16); }
-  const h1 = hi(0) % 360;
-  const h2 = (h1 + 137) % 360;
-  const h3 = (h1 + 270) % 360;
-  const cx1 = hi(1) % 80 + 10;
-  const cy1 = hi(2) % 80 + 10;
-  const r1  = hi(3) % 35 + 25;
-  const cx2 = 200 - (hi(4) % 80 + 10);
-  const cy2 = 200 - (hi(5) % 80 + 10);
-  const rot = hi(6) % 60;
-  const tx  = hi(7) % 120 + 40;
-  const ty  = hi(8) % 120 + 40;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
-    <rect width="200" height="200" fill="hsl(${h1},18%,86%)"/>
-    <circle cx="${cx1}" cy="${cy1}" r="${r1}" fill="hsl(${h1},38%,72%)" opacity="0.55"/>
-    <circle cx="${cx2}" cy="${cy2}" r="${r1 * 0.65}" fill="hsl(${h2},42%,68%)" opacity="0.45"/>
-    <polygon points="${tx},${ty - r1 * 0.8} ${tx + r1 * 0.7},${ty + r1 * 0.5} ${tx - r1 * 0.7},${ty + r1 * 0.5}"
-      fill="hsl(${h3},30%,60%)" opacity="0.3" transform="rotate(${rot} 100 100)"/>
-    <line x1="0" y1="${hi(9) % 160 + 20}" x2="200" y2="${hi(10) % 160 + 20}"
-      stroke="hsl(${h1},25%,55%)" stroke-width="1" opacity="0.2"/>
-    <line x1="${hi(11) % 160 + 20}" y1="0" x2="${hi(12) % 160 + 20}" y2="200"
-      stroke="hsl(${h2},20%,60%)" stroke-width="0.8" opacity="0.15"/>
-  </svg>`;
-}
-
-function statusStamp(status) {
-  const labels = { ON_SALE: '販売中', RESERVED: '予約済', SOLD: '売約済', PRIVATE: '非公開' };
-  const cls    = { ON_SALE: 'on-sale', RESERVED: 'reserved', SOLD: 'sold', PRIVATE: 'reserved' };
-  return `<span class="status-stamp ${cls[status] || ''}">${labels[status] || status}</span>`;
-}
 
 // ==========================================
 // PRODUCT LISTING
@@ -59,6 +28,8 @@ export async function mountProducts(container) {
   let currentPage = 0;
   let currentCategory = '';
   const PAGE_SIZE = 12;
+
+  await loadCategories();
 
   async function render(page, catId) {
     container.innerHTML = `
@@ -116,9 +87,9 @@ export async function mountProducts(container) {
       grid.innerHTML = data.products.map((p, i) => `
         <a href="#/product/${p.productId}" class="product-card"
            style="--card-rotation: ${i % 2 === 0 ? 1.2 : -1.2}; --index: ${i}">
-          <div class="card-image">${productPattern(p.productId)}</div>
+          <div class="card-image">${window.productPattern(p.productId)}</div>
           <div class="card-body">
-            ${statusStamp(p.status)}
+            ${window.statusStamp(p.status)}
             <h3 class="card-title">${window.escapeHtml(p.name)}</h3>
             <div class="card-price">${window.formatPrice(p.price)}</div>
             <div class="card-category">${window.escapeHtml(getCategoryName(p.categoryId))}</div>
@@ -189,7 +160,7 @@ export async function mountProductDetail(container, productId) {
 
         <div class="detail-grid">
           <div class="detail-image-wrap">
-            <div class="detail-image">${productPattern(productId)}</div>
+            <div class="detail-image">${window.productPattern(productId)}</div>
             ${Auth.isLoggedIn() ? `
             <button class="fav-btn ${isFav ? 'active' : ''}" id="fav-btn" aria-label="お気に入り">
               ${isFav ? '♥' : '♡'}
@@ -197,7 +168,7 @@ export async function mountProductDetail(container, productId) {
           </div>
 
           <div class="detail-info">
-            ${statusStamp(product.status)}
+            ${window.statusStamp(product.status)}
             ${catName ? `<div class="detail-category">${window.escapeHtml(catName)}</div>` : ''}
             <h1 class="detail-title">${window.escapeHtml(product.name)}</h1>
             <div class="detail-price">${window.formatPrice(product.price)}</div>

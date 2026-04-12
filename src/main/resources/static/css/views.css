@@ -555,8 +555,6 @@
   transform: translate(-2px, -2px);
 }
 
-.order-card-left {}
-
 .order-card-id {
   font-family: var(--font-mono);
   font-size: 0.65rem;
@@ -814,4 +812,28 @@
   font-family: var(--font-display);
   font-size: clamp(2rem, 5vw, 3.5rem);
   margin-bottom: 40px;
+}
+
+/* --- Utility flex classes (replaces inline styles) --- */
+.form-actions-end {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+.profile-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.profile-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.order-status-wrap {
+  margin-top: 12px;
 }

@@ -1,6 +1,7 @@
 package com.example.ec.http.controller
 
 import com.example.ec.usecase.product.get.GetProductForManagementUseCase
+import com.example.ec.usecase.product.get_categories.GetCategoriesUseCase
 import com.example.ec.usecase.product.get.GetProductUseCase
 import com.example.ec.usecase.product.get.ProductResult
 import com.example.ec.usecase.product.list.ListProductsQuery
@@ -26,7 +27,10 @@ class ProductController(
     private val registerProductUseCase: RegisterProductUseCase,
     private val updateProductUseCase: UpdateProductUseCase,
     private val updateProductStatusUseCase: UpdateProductStatusUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
 ) {
+
+    data class CategoryResponse(val id: UUID, val name: String)
 
     data class RegisterProductRequest(
         val name: String,
@@ -45,6 +49,12 @@ class ProductController(
     )
 
     data class UpdateProductStatusRequest(val status: String)
+
+    @GetMapping("/categories")
+    fun getCategories(): ResponseEntity<List<CategoryResponse>> {
+        val categories = getCategoriesUseCase.execute()
+        return ResponseEntity.ok(categories.map { CategoryResponse(it.id, it.name) })
+    }
 
     @GetMapping
     fun listProducts(

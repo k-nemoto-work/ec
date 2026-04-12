@@ -569,3 +569,38 @@
   .hamburger { display: flex; }
   .nav-mobile { display: flex; }
 }
+
+/* --- Confirm Dialog --- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fade-in 0.15s ease;
+}
+.confirm-dialog {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 32px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 6px 6px 0 var(--ink);
+}
+.confirm-dialog p {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+.confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

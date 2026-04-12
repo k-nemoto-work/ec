@@ -36,11 +36,46 @@ function formatDate(str) {
 export async function mountOrders(container) {
   container.innerHTML = `<div class="loading-view"><div class="loading-spinner"></div></div>`;
 
-  try {
-    const data = await api.getOrders({ page: 0, size: 20 });
-    const orders = data?.orders || [];
+  const PAGE_SIZE = 20;
+  let currentPage = 0;
+  let allOrders = [];
+  let totalCount = 0;
 
-    if (orders.length === 0) {
+  async function loadOrders(page) {
+    const data = await api.getOrders({ page, size: PAGE_SIZE });
+    totalCount = data?.totalCount ?? 0;
+    return data?.orders || [];
+  }
+
+  function renderOrderCards(orders, offset = 0) {
+    return orders.map((o, i) => `
+      <a href="#/orders/${o.orderId}" class="order-card" style="--index:${offset + i}">
+        <div class="order-card-left">
+          <div class="order-card-id">ORDER #${String(o.orderId).slice(0, 8).toUpperCase()}</div>
+          <div class="order-card-info">
+            <span class="order-card-date">${formatDate(o.orderedAt)}</span>
+            <span class="order-card-items">${o.itemCount}点</span>
+          </div>
+        </div>
+        <div class="order-card-right">
+          <span class="order-status ${o.status}">${ORDER_STATUS_LABELS[o.status] || o.status}</span>
+          <div class="order-card-amount">${window.formatPrice(o.totalAmount)}</div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  function updateLoadMore() {
+    const btn = document.getElementById('orders-load-more');
+    if (!btn) return;
+    const hasMore = allOrders.length < totalCount;
+    btn.style.display = hasMore ? '' : 'none';
+  }
+
+  try {
+    allOrders = await loadOrders(0);
+
+    if (allOrders.length === 0) {
       container.innerHTML = `
         <div class="view-orders">
           <h1>MY ORDERS</h1>
@@ -57,25 +92,36 @@ export async function mountOrders(container) {
     container.innerHTML = `
       <div class="view-orders">
         <h1>MY ORDERS</h1>
-        <div class="order-list">
-          ${orders.map((o, i) => `
-            <a href="#/orders/${o.orderId}" class="order-card" style="--index:${i}">
-              <div class="order-card-left">
-                <div class="order-card-id">ORDER #${String(o.orderId).slice(0, 8).toUpperCase()}</div>
-                <div class="order-card-info">
-                  <span class="order-card-date">${formatDate(o.orderedAt)}</span>
-                  <span class="order-card-items">${o.itemCount}点</span>
-                </div>
-              </div>
-              <div class="order-card-right">
-                <span class="order-status ${o.status}">${ORDER_STATUS_LABELS[o.status] || o.status}</span>
-                <div class="order-card-amount">${window.formatPrice(o.totalAmount)}</div>
-              </div>
-            </a>
-          `).join('')}
+        <div class="order-list" id="order-list">
+          ${renderOrderCards(allOrders)}
+        </div>
+        <div class="pagination" style="margin-top:24px">
+          <button class="pag-btn" id="orders-load-more" style="display:none">LOAD MORE</button>
         </div>
       </div>
     `;
+
+    updateLoadMore();
+
+    document.getElementById('orders-load-more').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'LOADING...';
+      try {
+        currentPage++;
+        const more = await loadOrders(currentPage);
+        const offset = allOrders.length;
+        allOrders = allOrders.concat(more);
+        document.getElementById('order-list').insertAdjacentHTML('beforeend', renderOrderCards(more, offset));
+        updateLoadMore();
+      } catch (err) {
+        window.toast(err.message || '読み込みに失敗しました', 'error');
+        currentPage--;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'LOAD MORE';
+      }
+    });
   } catch (e) {
     container.innerHTML = `
       <div class="error-view">
@@ -115,7 +161,7 @@ export async function mountOrderDetail(container, orderId) {
 
         <div class="order-detail-header">
           <div class="order-detail-id">ORDER ID: ${order.orderId}</div>
-          <div style="margin-top:12px">
+          <div class="order-status-wrap">
             <span class="order-status ${order.status}">${ORDER_STATUS_LABELS[order.status] || order.status}</span>
           </div>
           <div class="order-detail-date">${formatDate(order.orderedAt)}</div>
@@ -144,11 +190,11 @@ export async function mountOrderDetail(container, orderId) {
             </div>
             <div class="order-meta-item">
               <div class="order-meta-label">お支払い状態</div>
-              <div class="order-meta-value">${window.escapeHtml(order.paymentStatus || '-')}</div>
+              <div class="order-meta-value">${PAYMENT_LABELS[order.paymentStatus] || window.escapeHtml(order.paymentStatus || '-')}</div>
             </div>
             <div class="order-meta-item">
               <div class="order-meta-label">配送状態</div>
-              <div class="order-meta-value">${SHIPMENT_LABELS[order.shipmentStatus] || order.shipmentStatus}</div>
+              <div class="order-meta-value">${SHIPMENT_LABELS[order.shipmentStatus] || window.escapeHtml(order.shipmentStatus)}</div>
             </div>
             <div class="order-meta-item">
               <div class="order-meta-label">配送先</div>
@@ -171,7 +217,7 @@ export async function mountOrderDetail(container, orderId) {
     const cancelBtn = document.getElementById('btn-cancel');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', async () => {
-        if (!confirm('この注文をキャンセルしますか？')) return;
+        if (!await window.showConfirm('この注文をキャンセルしますか？')) return;
         cancelBtn.disabled = true;
         cancelBtn.textContent = 'CANCELLING...';
         try {

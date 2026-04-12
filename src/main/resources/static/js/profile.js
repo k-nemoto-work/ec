@@ -29,7 +29,7 @@ export async function mountProfile(container) {
           <div class="profile-label">メールアドレス</div>
           <div class="profile-value">${window.escapeHtml(me.email)}</div>
           <div class="profile-label">ステータス</div>
-          <div class="profile-value" style="margin:0">${window.escapeHtml(me.status)}</div>
+          <div class="profile-value" style="margin:0">${{ ACTIVE: '有効', INACTIVE: '無効' }[me.status] || window.escapeHtml(me.status)}</div>
         </div>
 
         <hr class="divider">
@@ -66,7 +66,7 @@ export async function mountProfile(container) {
 
           <div id="addr-error" class="form-error" style="display:none; margin-bottom:12px;"></div>
 
-          <div style="display:flex; gap:12px; justify-content:flex-end">
+          <div class="profile-form-actions">
             <button type="submit" class="btn-primary" id="addr-save">
               <span>SAVE ADDRESS</span>
             </button>
@@ -75,7 +75,7 @@ export async function mountProfile(container) {
 
         <hr class="divider">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div class="profile-footer-actions">
           <a href="#/orders" class="btn-secondary">VIEW ORDERS →</a>
         </div>
       </div>
