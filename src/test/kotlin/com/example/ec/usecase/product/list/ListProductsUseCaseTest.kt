@@ -1,6 +1,5 @@
 package com.example.ec.usecase.product.list
 
-import com.example.ec.domain.product.*
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -10,56 +9,51 @@ import kotlin.test.assertEquals
 
 class ListProductsUseCaseTest {
 
-    private val productRepository: ProductRepository = mockk()
+    private val productQueryService: ProductQueryService = mockk()
     private lateinit var useCase: ListProductsUseCase
 
     @BeforeEach
     fun setUp() {
-        useCase = ListProductsUseCase(productRepository)
+        useCase = ListProductsUseCase(productQueryService)
     }
 
     @Test
     fun `販売中の商品一覧を取得できる`() {
         // Given
-        val products = listOf(
-            createProduct("商品A"),
-            createProduct("商品B"),
+        val result = ProductListResult(
+            products = listOf(
+                ProductSummary(UUID.randomUUID(), "商品A", 1000L, UUID.randomUUID(), "ON_SALE"),
+                ProductSummary(UUID.randomUUID(), "商品B", 2000L, UUID.randomUUID(), "ON_SALE"),
+            ),
+            totalCount = 2L,
+            page = 0,
+            size = 20,
         )
-        every { productRepository.findAllOnSale(null, 0, 20) } returns products
-        every { productRepository.countOnSale(null) } returns 2L
+        every { productQueryService.findPageWithCount(ListProductsQuery()) } returns result
 
         // When
-        val result = useCase.execute(ListProductsQuery())
+        val actual = useCase.execute(ListProductsQuery())
 
         // Then
-        assertEquals(2, result.products.size)
-        assertEquals(2L, result.totalCount)
-        assertEquals(0, result.page)
-        assertEquals(20, result.size)
+        assertEquals(2, actual.products.size)
+        assertEquals(2L, actual.totalCount)
+        assertEquals(0, actual.page)
+        assertEquals(20, actual.size)
     }
 
     @Test
     fun `カテゴリIDで絞り込んだ商品一覧を取得できる`() {
         // Given
         val categoryId = UUID.randomUUID()
-        every { productRepository.findAllOnSale(CategoryId(categoryId), 0, 20) } returns emptyList()
-        every { productRepository.countOnSale(CategoryId(categoryId)) } returns 0L
+        val query = ListProductsQuery(categoryId = categoryId)
+        val result = ProductListResult(products = emptyList(), totalCount = 0L, page = 0, size = 20)
+        every { productQueryService.findPageWithCount(query) } returns result
 
         // When
-        val result = useCase.execute(ListProductsQuery(categoryId = categoryId))
+        val actual = useCase.execute(query)
 
         // Then
-        assertEquals(0, result.products.size)
-        assertEquals(0L, result.totalCount)
+        assertEquals(0, actual.products.size)
+        assertEquals(0L, actual.totalCount)
     }
-
-    private fun createProduct(name: String): Product =
-        Product(
-            id = ProductId.generate(),
-            name = ProductName(name),
-            price = Money(1000),
-            description = "説明",
-            categoryId = CategoryId(UUID.randomUUID()),
-            status = ProductStatus.ON_SALE,
-        )
 }
